@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Exam Leaderboard Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-trophy"></i> Online Exam Leaderboard Tracker</h1>
+            <p>Track student performance across 5 subjects</p>
+        </header>
+
+       
+        <section class="input-section">
+            <div class="form-card">
+                <h2><i class="fas fa-user-plus"></i> Add Student</h2>
+                <form id="studentForm">
+                    <div class="form-group">
+                        <label for="studentName">Student Name</label>
+                        <input type="text" id="studentName" name="studentName" required placeholder="Enter student name">
+                    </div>
+                    
+                    <div class="subjects-grid">
+                        <div class="form-group">
+                            <label for="math">Mathematics</label>
+                            <input type="number" id="math" name="math" min="0" max="100" required placeholder="0-100">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="english">English</label>
+                            <input type="number" id="english" name="english" min="0" max="100" required placeholder="0-100">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="science">Science</label>
+                            <input type="number" id="science" name="science" min="0" max="100" required placeholder="0-100">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="social">Social Studies</label>
+                            <input type="number" id="social" name="social" min="0" max="100" required placeholder="0-100">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="computer">Computer</label>
+                            <input type="number" id="computer" name="computer" min="0" max="100" required placeholder="0-100">
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-plus"></i> Add Student
+                        </button>
+                        <button type="button" class="btn-clear" onclick="clearForm()">
+                            <i class="fas fa-eraser"></i> Clear Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        
+        <section class="leaderboard-section">
+            <div class="leaderboard-header">
+                <h2><i class="fas fa-medal"></i> Live Leaderboard</h2>
+                <div class="leaderboard-actions">
+                    <button class="btn-import" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-file-excel"></i> Import Excel
+                    </button>
+                    <button class="btn-clear-all" onclick="clearAllData()">
+                        <i class="fas fa-trash"></i> Clear All Data
+                    </button>
+                    <span class="student-count" id="studentCount">0 Students</span>
+                </div>
+            </div>
+            
+            <div class="leaderboard-card">
+                <div class="table-container">
+                    <table id="leaderboardTable">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Student Name</th>
+                                <th>Math</th>
+                                <th>English</th>
+                                <th>Science</th>
+                                <th>Social</th>
+                                <th>Computer</th>
+                                <th>Total</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardBody">
+                            
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="empty-state" id="emptyState">
+                    <i class="fas fa-users"></i>
+                    <h3>No Students Added Yet</h3>
+                    <p>Add your first student using the form above to see the leaderboard!</p>
+                </div>
+            </div>
+        </section>
+
+       
+        <section class="stats-section">
+            <div class="stats-grid">
+               
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="avgPercentage">0%</h3>
+                        <p>Average Percentage</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="topScore">0%</h3>
+                        <p>Highest Score</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+   
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none;" onchange="handleFileImport(event)">
+
+  
+    <div class="notification" id="notification">
+        <div class="notification-content">
+            <i class="fas fa-check-circle"></i>
+            <span id="notificationMessage">Student added successfully!</span>
+        </div>
+    </div>
+
+  
+    <div class="modal" id="importModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-excel"></i> Import Excel Data</h3>
+                <button class="modal-close" onclick="closeImportModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="import-instructions">
+                    <h4>Excel File Format:</h4>
+                    <p>Your Excel file should have these columns: Name, Math, English, Science, Social, Computer</p>
+                    <p>All marks must be between 0-100. Student names must be at least 2 characters.</p>
+                </div>
+                <div class="import-preview" id="importPreview">
+                </div>
+                <div class="import-actions">
+                    <button class="btn-cancel" onclick="closeImportModal()">Cancel</button>
+                    <button class="btn-confirm-import" onclick="confirmImport()" id="confirmImportBtn" disabled>
+                        <i class="fas fa-check"></i> Import Students
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
